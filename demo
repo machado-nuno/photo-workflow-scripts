@@ -1,0 +1,26 @@
+
+#examples to metadata
+
+
+for($i=1;$i -lt 13;$i=$i+1) {
+    $name= ([string]$i).padleft(2,'0')
+    if (-Not (Test-Path -Path $name )) { 
+        echo "Creating folder named: " $name
+        New-Item -Type Directory $name 
+    }
+  
+}
+
+
+$listfiles = Get-ChildItem "."
+
+ForEach-Object ($i in $listfiles) {
+
+$dt_ =  $listfiles.LastWriteTime
+
+echo "Move file" $listfiles.FullName "to"   ([string]$dt_.Month).padleft(2,'0') 
+
+}
+
+$dt_ = Get-ItemPropertyValue -Path "all.jpg" -Name "LastWriteTime"
+Write-Output ([string]$dt_.Month).padleft(2,'0')
