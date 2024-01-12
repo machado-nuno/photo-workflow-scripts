@@ -1,7 +1,9 @@
-
-
+###
+### Try this one next time
 ###
 ###
+
+
 Function Compare-Files-Hash {
     param (
         $SourceFolder,
