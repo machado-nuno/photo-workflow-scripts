@@ -1,0 +1,9 @@
+
+#enable running powershell scripts
+
+Get-ExecutionPolicy -List
+
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted CurrentUser
+
+
+
