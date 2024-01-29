@@ -22,8 +22,9 @@ Function Compare-Files-Hash {
 
     foreach ($file in $files) {
 
-    
-        $d_file = $file.FullName.Replace($SourceFolder, $DestinationFolder)
+
+        $d_file = $file
+        $d_file.FullName.Replace($SourceFolder, $DestinationFolder)
 
         $s_hash = Get-FileHash $file.FullName
         
