@@ -1,16 +1,12 @@
 
-Function Compare-Files-Hash {
-    param (
-        $SourceFolder,
-        $DestinationFolder
-    )
+Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, [bool]$ErrorOnly) {
 
     $str_separator = ","
 
+    Write-Output "Starting: gathering Folder $SourceFolder information."
     $files = Get-ChildItem -Recurse -File $SourceFolder
 
     Write-Host ("Total source files = ", $files.Count)
-
 
     $i=1
     $missing=0
@@ -22,10 +18,9 @@ Function Compare-Files-Hash {
 
     foreach ($file in $files) {
 
-
-        $d_file = $file
-        $d_file.FullName.Replace($SourceFolder, $DestinationFolder)
-
+        $d_file = $file.FullName.ToLower()
+        $d_file = $d_file.Replace($SourceFolder.ToLower(), $DestinationFolder.ToLower())
+ 
         $s_hash = Get-FileHash $file.FullName
         
         if (Test-Path $d_file) {
@@ -57,11 +52,11 @@ Function Compare-Files-Hash {
         $i++
     }
 
-    Write-Host ("Summary stats")
-    Write-Host ("Identical Files=", $match)
-    Write-Host ("Diferent Files =", $notmatch)
-    Write-Host ("Missing Files  =", $missing)
-    Write-Host ("Total          =", $total_files)
+    Write-Host "Summary stats"
+    Write-Host "Identical Files= $match"
+    Write-Host "Diferent Files = $notmatch"
+    Write-Host "Missing Files  = $missing"
+    Write-Host "Total          = $total_files"
 
 
 }
@@ -132,14 +127,9 @@ if (! $found) {
     exit -1
 } 
 
-Write-Host("Comparing folders - source: ", $source, " destination:", $dest)
+Write-Host "Comparing folders - source: $source  destination: $dest"
 
-Compare-Files-Hash($source, $dest)
+Compare-Files-Hash $source $dest $true
 
-
-
-
-
-
-
+exit
 
