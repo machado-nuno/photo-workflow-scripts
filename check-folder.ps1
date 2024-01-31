@@ -18,6 +18,12 @@ Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, 
 
     foreach ($file in $files) {
 
+
+        if ($ErrorOnly) {
+            $perc = $i/$total_files*100
+            Write-Progress -Activity "Comparing Files from $Sourcefolder with $DestinationFolder" -PercentComplete $perc
+        }
+
         $d_file = $file.FullName.ToLower()
         $d_file = $d_file.Replace($SourceFolder.ToLower(), $DestinationFolder.ToLower())
  
@@ -32,19 +38,21 @@ Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, 
                 $state= "Match"
                 $mcolor = 'Green'
                 $match++
+
+                if (-not $ErrorOnly) {
+                    Write-Host($i,"of",$total_files, $str_separator, $state, $str_separator, $s_hash.Hash, $str_separator, $d_hash.Hash, $str_separator, $file.FullName, $str_separator, $d_file) -ForegroundColor $mcolor
+                }
             }
             else {
-                
                 $state= "MisMatch"
                 $mcolor = 'DarkRed'
                 $notmatch++
+                Write-Host($i,"of",$total_files, $str_separator, $state, $str_separator, $s_hash.Hash, $str_separator, $d_hash.Hash, $str_separator, $file.FullName, $str_separator, $d_file) -ForegroundColor $mcolor
             }
 
-            Write-Host($i,"of",$total_files, $str_separator, $state, $str_separator, $s_hash.Hash, $str_separator, $d_hash.Hash, $str_separator, $file.FullName, $str_separator, $d_file) -ForegroundColor $mcolor
-
+            
         }
         else {
-
             Write-Host($i,"of",$total_files, $str_separator, "Missing", $str_separator, $s_hash.Hash, $str_separator, "missing", $str_separator, $file.FullName, $str_separator, "missing") -ForegroundColor DarkRed
             $missing++
         }
