@@ -1,5 +1,5 @@
 
-Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, [bool]$ErrorOnly) {
+Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, [bool]$Verbose) {
 
     $str_separator = ","
 
@@ -19,10 +19,10 @@ Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, 
     foreach ($file in $files) {
 
 
-        if ($ErrorOnly) {
-            $perc = $i/$total_files*100
-            Write-Progress -Activity "Comparing Files from $Sourcefolder with $DestinationFolder" -PercentComplete $perc
-        }
+        #if ($Verbose) {
+        $perc = $i/$total_files*100
+        Write-Progress -Activity "Comparing Files from $Sourcefolder with $DestinationFolder" -PercentComplete $perc -Status "($i of $total_files) Current source File: $file.FullName"
+        #}
 
         $d_file = $file.FullName.ToLower()
         $d_file = $d_file.Replace($SourceFolder.ToLower(), $DestinationFolder.ToLower())
@@ -39,7 +39,7 @@ Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, 
                 $mcolor = 'Green'
                 $match++
 
-                if (-not $ErrorOnly) {
+                if ($Verbose) {
                     Write-Host($i,"of",$total_files, $str_separator, $state, $str_separator, $s_hash.Hash, $str_separator, $d_hash.Hash, $str_separator, $file.FullName, $str_separator, $d_file) -ForegroundColor $mcolor
                 }
             }
@@ -100,9 +100,9 @@ Function Get-FolderName
 function showUsage {
  
     
-    Write-Host("Usage:")
-    Write-Host("    check-folder SOURCE DESTINATION")
-    Write-Host("")
+    Write-Host "Usage:"
+    Write-Host "    check-folder.ps1 SOURCE DESTINATION"
+    Write-Host""
 }
 
 
@@ -137,7 +137,8 @@ if (! $found) {
 
 Write-Host "Comparing folders - source: $source  destination: $dest"
 
-Compare-Files-Hash $source $dest $true
+Compare-Files-Hash $source $dest $false
 
 exit
+
 
