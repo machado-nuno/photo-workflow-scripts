@@ -20,7 +20,7 @@ Function Compare-Files-Hash ([string]$SourceFolder, [string]$DestinationFolder, 
 
         #Write Progress, usefull for long file list
         $perc = $i/$total_files*100
-        Write-Progress -Activity "Comparing Files from $Sourcefolder with $DestinationFolder" -PercentComplete $perc -Status "($i of $total_files) Current source File: $file.FullName"
+        Write-Progress -Activity "Comparing Files from $Sourcefolder with $DestinationFolder" -PercentComplete $perc -Status "($i of $total_files) Current source File: $file"
 
         $d_file = $file.FullName.ToLower()
         $d_file = $d_file.Replace($SourceFolder.ToLower(), $DestinationFolder.ToLower())
