@@ -1,0 +1,29 @@
+# Define the directory to organize
+$directoryPath = "C:\path\to\your\directory"
+
+# Path to exiftool.exe
+$exifToolPath = "C:\path\to\exiftool.exe"
+
+# Get all .jpg files in the directory
+$files = Get-ChildItem -Path $directoryPath -File -Filter *.jpg
+
+foreach ($file in $files) {
+    # Get the "Date Taken" EXIF data
+    $dateTaken = & $exifToolPath -s -s -s -DateTimeOriginal $file.FullName
+
+    if ($dateTaken) {
+        # Parse the date from the EXIF data
+        $date = [DateTime]::ParseExact($dateTaken, "yyyy:MM:dd HH:mm:ss", $null)
+
+        # Define the subdirectory path
+        $subdirectoryPath = Join-Path -Path $directoryPath -ChildPath "$($date.Year)-$($date.Month)"
+
+        # Create the subdirectory if it doesn't exist
+        if (!(Test-Path -Path $subdirectoryPath)) {
+            New-Item -ItemType Directory -Path $subdirectoryPath | Out-Null
+        }
+
+        # Move the file to the subdirectory
+        Move-Item -Path $file.FullName -Destination $subdirectoryPath
+    }
+}
