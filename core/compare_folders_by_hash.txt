@@ -1,0 +1,156 @@
+REVIEW AND ADAPT THE CODE
+
+# Define the source and destination folders
+$sourceFolder = "C:\path\to\source"
+$destinationFolder = "C:\path\to\destination"
+
+# Get all files in the source folder
+$sourceFiles = Get-ChildItem -File -Recurse -Path $sourceFolder
+
+# Get all files in the destination folder
+$destinationFiles = Get-ChildItem -File -Recurse -Path $destinationFolder
+
+# Create dictionaries to store file hashes
+$sourceHashes = @{}
+$destinationHashes = @{}
+
+# Calculate hashes for files in the source folder
+foreach ($file in $sourceFiles) {
+    $hash = Get-FileHash -Algorithm SHA256 -Path $file.FullName
+    $sourceHashes[$hash.Hash] = $file.FullName
+}
+
+# Calculate hashes for files in the destination folder
+foreach ($file in $destinationFiles) {
+    $hash = Get-FileHash -Algorithm SHA256 -Path $file.FullName
+    $destinationHashes[$hash.Hash] = $file.FullName
+}
+
+# Compare hashes and identify missing or changed files
+$missingFiles = Compare-Object -ReferenceObject $sourceHashes.Keys -DifferenceObject $destinationHashes.Keys
+
+# Print results
+foreach ($missingFile in $missingFiles) {
+    $hash = $missingFile.InputObject
+    $sourcePath = $sourceHashes[$hash]
+    $destinationPath = $destinationHashes[$hash]
+    
+    if ($missingFile.SideIndicator -eq "<=") {
+        Write-Host "File missing in destination: $sourcePath"
+    } elseif ($missingFile.SideIndicator -eq "=>") {
+        Write-Host "File changed in destination: $sourcePath -> $destinationPath"
+    }
+}
+
+# Print completion message
+Write-Host "Comparison completed."
+
+------------------------------------------------------------------------
+
+
+# Define the function to compare folders by hash
+function compare_folders_by_hash {
+    param (
+        [string]$source_folder,
+        [string]$destination_folder
+    )
+
+    # Check if source folder exists
+    if (-not (Test-Path -Path $source_folder -PathType Container)) {
+        Write-Host "Error: Source folder '$source_folder' does not exist."
+        return
+    }
+
+    # Check if destination folder exists
+    if (-not (Test-Path -Path $destination_folder -PathType Container)) {
+        Write-Host "Error: Destination folder '$destination_folder' does not exist."
+        return
+    }
+
+    # Get file hashes for source and destination folders
+    $source_hashes = Get-FileHash -Algorithm SHA256 -Path $source_folder -Recurse
+    $destination_hashes = Get-FileHash -Algorithm SHA256 -Path $destination_folder -Recurse
+
+    # Compare hashes and identify missing or changed files
+    $missing_files = Compare-Object -ReferenceObject $source_hashes.Hash -DifferenceObject $destination_hashes.Hash
+
+    # Print results
+    foreach ($missingFile in $missing_files) {
+        $hash = $missingFile.InputObject
+        $sourcePath = $source_hashes | Where-Object { $_.Hash -eq $hash } | Select-Object -ExpandProperty Path
+        $destinationPath = $destination_hashes | Where-Object { $_.Hash -eq $hash } | Select-Object -ExpandProperty Path
+
+        if ($missingFile.SideIndicator -eq "<=") {
+            Write-Host "File missing in destination: $sourcePath"
+        } elseif ($missingFile.SideIndicator -eq "=>") {
+            Write-Host "File changed in destination: $sourcePath -> $destinationPath"
+        }
+    }
+
+    Write-Host "Comparison completed."
+}
+
+# Get command line arguments
+$source_folder = $args[0]
+$destination_folder = $args[1]
+
+# Check if arguments are provided
+if (-not $source_folder -or -not $destination_folder) {
+    Write-Host "Usage: compare_folders.ps1 <source_folder> <destination_folder>"
+    return
+}
+
+# Call the function
+compare_folders_by_hash -source_folder $source_folder -destination_folder $destination_folder
+
+
+----------------------------------------------------------
+
+
+function compare_folders_by_hash {
+    param (
+        [string]$source_folder,
+        [string]$destination_folder
+    )
+
+    # Check if source folder exists
+    if (-not (Test-Path -Path $source_folder -PathType Container)) {
+        Write-Host "Error: Source folder '$source_folder' does not exist."
+        return
+    }
+
+    # Check if destination folder exists
+    if (-not (Test-Path -Path $destination_folder -PathType Container)) {
+        Write-Host "Error: Destination folder '$destination_folder' does not exist."
+        return
+    }
+
+    # Get file hashes for source and destination folders
+    $source_hashes = Get-FileHash -Algorithm SHA256 -Path $source_folder -Recurse
+    $destination_hashes = Get-FileHash -Algorithm SHA256 -Path $destination_folder -Recurse
+
+    # Compare hashes and identify missing or changed files
+    $missing_files = Compare-Object -ReferenceObject $source_hashes.Hash -DifferenceObject $destination_hashes.Hash
+
+    # Print results
+    foreach ($missingFile in $missing_files) {
+        $hash = $missingFile.InputObject
+        $sourcePath = $source_hashes | Where-Object { $_.Hash -eq $hash } | Select-Object -ExpandProperty Path
+        $destinationPath = $destination_hashes | Where-Object { $_.Hash -eq $hash } | Select-Object -ExpandProperty Path
+
+        if ($missingFile.SideIndicator -eq "<=") {
+            Write-Host "File missing in destination: $sourcePath"
+        } elseif ($missingFile.SideIndicator -eq "=>") {
+            Write-Host "File changed in destination: $sourcePath -> $destinationPath"
+        }
+    }
+
+    Write-Host "Comparison completed."
+}
+
+# Example usage
+$source_folder = "C:\path\to\source"
+$destination_folder = "C:\path\to\destination"
+compare_folders_by_hash -source_folder $source_folder -destination_folder $destination_folder
+
+
