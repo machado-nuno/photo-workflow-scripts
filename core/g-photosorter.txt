@@ -1,0 +1,145 @@
+Let's add a simple graphical user interface (GUI) to the PowerShell script using Windows Presentation Foundation (WPF). The GUI will include:
+
+- **Browse Buttons**: To select the source and destination directories.
+- **Start Button**: To trigger the sorting operation.
+- **Log Box**: To display logging activities in real time.
+
+### Enhanced PowerShell Script with GUI
+
+Here's a script that uses WPF for the GUI. You can copy this code into a PowerShell script file (`.ps1`) and run it in a PowerShell environment with administrative privileges:
+
+```powershell
+Add-Type -AssemblyName PresentationFramework
+
+# Create the XAML for the GUI
+[xml]$xaml = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        Title="Photo Organizer" Height="400" Width="600">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+            <Label Content="Source Directory:" VerticalAlignment="Center" Width="100"/>
+            <TextBox Name="SourceDir" Width="350" Margin="5,0,0,0"/>
+            <Button Name="BrowseSource" Content="Browse..." Width="75" Margin="5,0,0,0"/>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="0,10,0,10" Grid.Row="1">
+            <Label Content="Destination Directory:" VerticalAlignment="Center" Width="100"/>
+            <TextBox Name="DestinationDir" Width="350" Margin="5,0,0,0"/>
+            <Button Name="BrowseDestination" Content="Browse..." Width="75" Margin="5,0,0,0"/>
+        </StackPanel>
+
+        <TextBox Name="LogBox" Grid.Row="2" Margin="0,10,0,10" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" IsReadOnly="True"/>
+
+        <Button Name="StartButton" Content="Start Sorting" Width="100" Height="30" Grid.Row="3" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+    </Grid>
+</Window>
+"@
+
+# Load the XAML
+$reader = (New-Object System.Xml.XmlNodeReader $xaml)
+$Window = [Windows.Markup.XamlReader]::Load($reader)
+
+# Assign UI elements to variables
+$SourceDir = $Window.FindName("SourceDir")
+$DestinationDir = $Window.FindName("DestinationDir")
+$LogBox = $Window.FindName("LogBox")
+$BrowseSource = $Window.FindName("BrowseSource")
+$BrowseDestination = $Window.FindName("BrowseDestination")
+$StartButton = $Window.FindName("StartButton")
+
+# Function to log messages to the LogBox
+function Log-Message {
+    param ($message)
+    $LogBox.AppendText("$(Get-Date -Format "HH:mm:ss") - $message`n")
+    $LogBox.ScrollToEnd()
+}
+
+# Browse for Source Directory
+$BrowseSource.Add_Click({
+    $folder = [System.Windows.Forms.FolderBrowserDialog]::new()
+    if ($folder.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $SourceDir.Text = $folder.SelectedPath
+    }
+})
+
+# Browse for Destination Directory
+$BrowseDestination.Add_Click({
+    $folder = [System.Windows.Forms.FolderBrowserDialog]::new()
+    if ($folder.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        $DestinationDir.Text = $folder.SelectedPath
+    }
+})
+
+# Start Sorting Button
+$StartButton.Add_Click({
+    if (-not (Test-Path $SourceDir.Text)) {
+        Log-Message "Source directory is invalid!"
+        return
+    }
+    if (-not (Test-Path $DestinationDir.Text)) {
+        Log-Message "Destination directory is invalid!"
+        return
+    }
+
+    # Start sorting process
+    $photos = Get-ChildItem -Path $SourceDir.Text -Include *.jpg, *.jpeg, *.png, *.gif, *.tiff -Recurse
+    foreach ($photo in $photos) {
+        try {
+            $dateTaken = (Get-ItemProperty -Path $photo.FullName).DateTaken
+            if (-not $dateTaken) {
+                $dateTaken = (Get-ItemProperty -Path $photo.FullName).LastWriteTime
+            }
+
+            $year = $dateTaken.ToString("yyyy")
+            $month = $dateTaken.ToString("MM")
+            $targetFolder = Join-Path -Path $DestinationDir.Text -ChildPath "$year\$month"
+
+            if (-Not (Test-Path $targetFolder)) {
+                New-Item -Path $targetFolder -ItemType Directory -Force | Out-Null
+            }
+
+            Move-Item -Path $photo.FullName -Destination $targetFolder
+            Log-Message "Moved $($photo.Name) to $targetFolder"
+        } catch {
+            Log-Message "Error processing $($photo.FullName): $_"
+        }
+    }
+    Log-Message "Sorting complete!"
+})
+
+# Show the window
+$Window.ShowDialog()
+```
+
+### How to Use the Script
+
+1. **Save the Script**: Save the above script to a `.ps1` file, such as `PhotoOrganizer.ps1`.
+2. **Run the Script**:
+   - Open PowerShell with administrative privileges.
+   - Navigate to the directory where the script is saved.
+   - Run the script by typing `.\PhotoOrganizer.ps1`.
+3. **Browse and Start**:
+   - Use the **Browse** buttons to select the source and destination directories.
+   - Click the **Start Sorting** button to begin organizing the photos.
+   - The log box will display real-time logging of the activities.
+
+### Explanation of GUI Components
+
+- **XAML (Extensible Application Markup Language)** is used to define the layout of the GUI, including text boxes, labels, buttons, and a text box for logging.
+- **Browse Buttons** allow users to select source and destination directories using a folder browser dialog.
+- **Log-Message Function** appends messages to the log box to keep the user informed of the script's actions.
+  
+### Requirements
+
+- **Windows**: The script is intended for use on Windows operating systems with PowerShell installed.
+- **PowerShell Execution Policy**: Make sure your execution policy allows running scripts (`Set-ExecutionPolicy RemoteSigned`).
+
+This improved version provides a user-friendly interface and real-time feedback during the photo organization process.
