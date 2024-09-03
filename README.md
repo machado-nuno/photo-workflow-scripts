@@ -1,2 +1,4 @@
-# powershell-stuff
-Some powershell scripts made by me!
+# photo-workflow-scripts
+
+Collection of scripts, to help my photo workflow.
+
